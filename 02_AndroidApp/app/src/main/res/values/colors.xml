@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg">#FF121418</color>
+    <color name="surface">#FF1E232B</color>
+    <color name="surface2">#FF272E38</color>
+    <color name="brand">#FF4FC3F7</color>
+    <color name="brand_dark">#FF0288D1</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="dim">#FF9E9E9E</color>
+    <color name="white_key">#FFF5F5F5</color>
+    <color name="white_key_pressed">#FFB3E5FC</color>
+    <color name="black_key">#FF212121</color>
+    <color name="black_key_pressed">#FF01579B</color>
+    <color name="rec">#FFEF5350</color>
+    <color name="ok">#FF66BB6A</color>
+    <color name="off">#FF616161</color>
+</resources>

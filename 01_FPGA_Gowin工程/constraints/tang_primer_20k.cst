@@ -1,0 +1,164 @@
+// ============================================================================
+// tang_primer_20k.cst - Tang Primer 20K (GW2A-LV18PG256C8/I7) + Dock 底板
+//
+// 引脚来源（均已核对官方资料，2026-09 核验）：
+//  * 时钟/复位/音频/LED/WS2812 —— Sipeed TangPrimer-20K-example README +
+//    Dock 官方原理图（Tang_Primer_20K_Dock_3714_Schematics.pdf）
+//  * 4 个外接排针座（原理图位号 J5/J6/J12/J14，2x6 双排针）：
+//      每座引脚 1、2 = +3V3，引脚 3、4 = GND，引脚 5~12 = 8 个 IO
+//      - J5/J6 在 RGB LCD（40P FPC）附近，与 RGB LCD 数据线复用
+//      - J12 在摄像头（24P FPC）附近，与 DVP 数据线复用
+//      - J14 在麦克阵列（10P FPC）附近，与按键/板载 WS2812 复用
+//    底板丝印每个针脚旁标有球号，接线时请逐一核对。
+//
+// 注意（Dock 底板）：
+//  * 使用前必须把拨码开关 1 号位（SW_01，B10/RECFG）拨到使能位，
+//    否则核心板不启动、LED0/LED1 常亮、无法烧录
+//  * 板载 5 位拨码开关全部是 1.5V 电平域（SW_01~SW_05 经 1.5K 上拉到
+//    +1V5、13K 下拉到 GND），且 SW_01 兼任核心板使能（RECFG）——
+//    不能用作 3.3V 用户输入！M6 自检由"同时按住键盘 key12+key13 ≥0.5s"
+//    触发（见 top_synth.v）。自检触发源不使用悬空 IO：enc2_btn (J5 pin12)
+//    未接编码器时处于浮空状态，会被读成低电平而导致上电误触发
+//  * 用户按键 S1~S4（T3/T2/D7/C7）位于 1.5V bank（bank4），本项目不用；
+//    复位用 S0（T10，3.3V bank）。3714 新版底板 SW0/KEY4 球号对调过，
+//    若按 S0 无效，逐个试按键并把 rst_btn 改成对应球号
+//  * V3708 版底板 LED2/LED3 丝印有误：LED2 实际=N16，LED3 实际=N14
+// ============================================================================
+
+// 时钟与复位
+IO_LOC "clk27"   H11;    // 核心板 27 MHz 晶振
+IO_LOC "rst_btn" T10;    // Dock S0 按键（3.3V bank；按下=低电平复位）
+
+// 板载音频输出（Dock 3.5mm 耳机口，PT8211 DAC + LPA4809MSF 功放）
+IO_LOC "pa_en"  R16;     // 功放使能（高有效）
+IO_LOC "hp_din" P15;     // I2S 数据
+IO_LOC "hp_ws"  P16;     // I2S 字选 / LRCK
+IO_LOC "hp_bck" N15;     // I2S 位时钟
+
+// 状态 LED（共 6 个，板载）
+IO_LOC "led[0]" L16;
+IO_LOC "led[1]" L14;
+IO_LOC "led[2]" N16;
+IO_LOC "led[3]" N14;
+IO_LOC "led[4]" A13;
+IO_LOC "led[5]" C13;
+
+// ---------------------------------------------------------------------------
+// 4x4 矩阵键盘 —— 接 J12 座（摄像头 FPC 附近的 2x6 排针）
+// 引脚 1/2=+3V3、3/4=GND（本项目键盘不用电，可空着），IO 用 5~12
+// 键盘薄膜引出行列顺序因厂家而异，接错表现为键位映射乱（不损坏），
+// 按实际接线改这里的对应关系或软件键表即可。
+// ---------------------------------------------------------------------------
+IO_LOC "kb_col[0]" J14;  // J12 pin5  （球 J14，与麦克阵列座 J14 同名纯属巧合）
+IO_LOC "kb_col[1]" R11;  // J12 pin6
+IO_LOC "kb_col[2]" M14;  // J12 pin7
+IO_LOC "kb_col[3]" M15;  // J12 pin8
+IO_LOC "kb_row[0]" T12;  // J12 pin9
+IO_LOC "kb_row[1]" J16;  // J12 pin10
+IO_LOC "kb_row[2]" T11;  // J12 pin11
+IO_LOC "kb_row[3]" P11;  // J12 pin12
+
+// ---------------------------------------------------------------------------
+// I2C 传感器总线（MPR121 触摸 + PCF8591 ADC，两器件并联 SDA/SCL）
+// 接 J5 座（RGB LCD FPC 附近）pin5/pin6；模块 3.3V 供电取自 J5 pin1/2，
+// GND 取 J5 pin3/4。模块板载上拉够用，总线另配内部弱上拉。
+// ---------------------------------------------------------------------------
+IO_LOC "sda" N8;         // J5 pin6
+IO_LOC "scl" L9;         // J5 pin5
+
+// ---------------------------------------------------------------------------
+// EC11 旋转编码器 x2（A/B/按键，共端接地，内部上拉 idle 高）
+// 接 J5 座 pin7~pin12，GND 用 J5 pin3/4。
+// 若旋转方向反了，对调该编码器的 A/B 两根线即可。
+// ---------------------------------------------------------------------------
+IO_LOC "enc1_a"   N9;    // J5 pin7
+IO_LOC "enc1_b"   N7;    // J5 pin8
+IO_LOC "enc1_btn" N6;    // J5 pin9
+IO_LOC "enc2_a"   D11;   // J5 pin10
+IO_LOC "enc2_b"   A11;   // J5 pin11
+IO_LOC "enc2_btn" B11;   // J5 pin12
+
+// ---------------------------------------------------------------------------
+// WS2812B 灯带 —— 数据接 J6 座 pin11（球 D14）
+// 灯带 5V 用独立 5V 电源（手机充电头即可），DIN 串 470Ω，GND 必须与
+// Dock 共地（接 J6 pin3/4）。想同时点亮板上 RGB LED，可再从 J14 座的
+// WS2812-DAT 针（球 T9）并一根线到灯带 DIN。
+// ---------------------------------------------------------------------------
+IO_LOC "ws_din" D14;     // J6 pin11
+// 板上自带的 WS2812（J14 座 WS2812-DAT），与 ws_din 同源同数据。
+// 它不用接任何线就有电，是"板子这一侧到底好不好使"的天然指示灯。
+IO_LOC "ws_din_ob" T9;   // J14 pin? 板载 WS2812-DAT
+IO_PORT "ws_din_ob" IO_TYPE=LVCMOS33 DRIVE=8;
+
+// ---------------------------------------------------------------------------
+// LCD SDO 读回（保留脚）—— 模块 SDO(MISO) -> J6 pin12，内部上拉
+// 屏型已定案为 ST7789V，SDO 的 ID 探针逻辑会被综合器优化掉，此脚当前空闲。
+// M6 自检不再用跳线，改由"编码器2 按键长按 1.5s"触发（见 top_synth.v）。
+// ---------------------------------------------------------------------------
+IO_LOC "lcd_sdo" E15;    // J6 pin12 ← 模块 SDO(MISO)，内部上拉
+IO_PORT "lcd_sdo"   IO_TYPE=LVCMOS33 PULL_MODE=UP;
+
+// ---------------------------------------------------------------------------
+// ST7789V 2.8寸 SPI 液晶 —— 整块接 J6 座（3.3V 供电直接取自座子）
+//   模块 VCC → J6 pin1/2 (+3V3)   模块 GND → J6 pin3/4
+// 模块自带 SD 卡座和触摸（触摸 I2C 暂未使用，可悬空）。
+// ---------------------------------------------------------------------------
+IO_LOC "lcd_scl" B12;    // J6 pin5  → 模块 SCL
+IO_LOC "lcd_sda" C12;    // J6 pin6  → 模块 SDA
+IO_LOC "lcd_dc"  B13;    // J6 pin7  → 模块 DC
+IO_LOC "lcd_cs"  A14;    // J6 pin8  → 模块 CS
+IO_LOC "lcd_rst" B14;    // J6 pin9  → 模块 RES
+IO_LOC "lcd_bl"  A15;    // J6 pin10 → 模块 BLK（背光）
+
+// 电气配置
+IO_PORT "clk27"   IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "rst_btn" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "pa_en"   IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "hp_din"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "hp_ws"   IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "hp_bck"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[0]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[1]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[2]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[3]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[4]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "led[5]"  IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "kb_col[0]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "kb_col[1]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "kb_col[2]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "kb_col[3]" IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "kb_row[0]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "kb_row[1]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "kb_row[2]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "kb_row[3]" IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "sda"       IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "scl"       IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8;
+IO_PORT "enc1_a"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "enc1_b"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "enc1_btn"  IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "enc2_a"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "enc2_b"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "enc2_btn"  IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_PORT "ws_din"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_scl"   IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_sda"   IO_TYPE=LVCMOS33 DRIVE=8;
+
+// ---------------------------------------------------------------------------
+// Bluetooth link (拓展 4) —— 固定在 PMOD0 上，不再让工具自动选。
+//
+// 这两个信号同时给出 IO_TYPE 与 IO_LOC。只给 IO_TYPE 时工具会挑 D15 / F14
+// （bank 0，3.3 V，电气上可行），但那两个球在底板上没有对应丝印，现场不便接线。
+// PMOD0 座子每个针脚旁都印着球号（T6 P6 R8 T7 / T8 P8 P9 T9），全部空闲、
+// 全在 bank 3、全为 LVCMOS33，因此固定在 T6 / T8，按丝印即可接线。
+//
+// IO_LOC 不可省略：不加位置约束时工具会把它分到 R6（bank 4、LVCMOS18，
+// 1.8 V），接 3.3 V 模块会损坏 FPGA。
+// ---------------------------------------------------------------------------
+IO_LOC  "bt_rxd"    T6;    // PMOD0 —— 模块 TXD 接这里
+IO_PORT "bt_rxd"    IO_TYPE=LVCMOS33 PULL_MODE=UP;
+IO_LOC  "bt_txd"    T8;    // PMOD0 —— 模块 RXD 接这里
+IO_PORT "bt_txd"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_dc"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_cs"    IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_rst"   IO_TYPE=LVCMOS33 DRIVE=8;
+IO_PORT "lcd_bl"    IO_TYPE=LVCMOS33 DRIVE=8;

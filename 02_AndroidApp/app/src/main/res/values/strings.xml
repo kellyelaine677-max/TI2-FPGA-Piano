@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TI2 电子琴</string>
+
+    <string name="tab_keys">弹琴</string>
+    <string name="tab_keymap">键位</string>
+    <string name="tab_score">曲谱</string>
+    <string name="tab_record">录音</string>
+
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="state_idle">还没连上琴</string>
+    <string name="state_connecting">正在连接…</string>
+    <string name="state_connected">已连上</string>
+
+    <string name="octave">八度</string>
+    <string name="timbre">音色</string>
+    <string name="hint_keys">按住琴键发声，几个手指一起按也行</string>
+    <string name="hint_timbre">点一下就换，琴上的旋钮和这里改的是同一个值</string>
+
+    <string name="hint_keymap">设置琴上每个键发什么音，改动立刻生效</string>
+    <string name="btn_reset">恢复默认</string>
+    <string name="btn_resend">重新发送</string>
+
+    <string name="score_hint">选一首曲子，传到琴上</string>
+    <string name="mode_hint">引导 = 只亮灯等你弹；直接播放 = 板子自己弹出来</string>
+    <string name="mode_guide">引导</string>
+    <string name="mode_play">直接播放</string>
+    <string name="diag_title">连接诊断</string>
+    <string name="diag_test">发一个测试音</string>
+    <string name="btn_send_score">传到琴上</string>
+    <string name="btn_stop_play">停止播放</string>
+    <string name="score_autostop">曲子放完了，已自动停</string>
+    <string name="speed_label">曲速</string>
+    <string name="speed_fast">快</string>
+    <string name="speed_norm">正常</string>
+    <string name="speed_slow">慢</string>
+    <string name="btn_import_file">从文件导入</string>
+    <string name="btn_import_url">从网址导入</string>
+    <string name="url_hint">粘贴曲谱网址</string>
+
+    <string name="record_hint">把你弹的曲子录下来，可以回放或导出</string>
+    <string name="btn_record">开始录音</string>
+    <string name="btn_stop">停止</string>
+    <string name="btn_playback">回放</string>
+    <string name="btn_export">导出</string>
+    <string name="btn_clear">清空</string>
+    <string name="rec_idle">还没有录音</string>
+
+    <string name="pick_device">找到这些蓝牙设备</string>
+    <string name="kind_spp">经典蓝牙</string>
+    <string name="kind_ble">低功耗蓝牙</string>
+    <string name="rescan">重新扫描</string>
+
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+</resources>

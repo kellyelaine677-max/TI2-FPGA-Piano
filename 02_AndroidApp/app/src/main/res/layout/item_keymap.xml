@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="4dp"
+    android:paddingTop="2dp"
+    android:paddingEnd="4dp"
+    android:paddingBottom="2dp">
+
+    <TextView
+        android:id="@+id/tvSlot"
+        android:layout_width="72dp"
+        android:layout_height="wrap_content"
+        android:text="键 1"
+        android:textColor="@color/white"
+        android:textSize="13sp" />
+
+    <Spinner
+        android:id="@+id/spSemi"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
+</LinearLayout>
